@@ -1,3 +1,5 @@
+// ===== SERVIDOR FIXFLOW - VERSÃO 1.0.1 =====
+const express = require('express');
 // server.js - Backend para assistência técnica
 const express = require('express');
 const cors = require('cors');
