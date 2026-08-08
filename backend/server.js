@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://fixflow-project.onrender.com/api/$1" }
+  ]
+}
