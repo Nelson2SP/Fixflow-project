@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 
 // ===== CONEXÃO COM SUPABASE =====
 // IMPORTANTE: Depois que criar as tabelas, você vai substituir essas variáveis
-const supabaseUrl = 'https://nqxmojacgnblxfiqkkeo.supabase.com';
+const supabaseUrl = 'https://nqxmojacgnblxfiqkkeo.supabase.co';
 const supabaseKey = 'sb_publishable_tAoELxOpteV2pOjrYMMfAg_EWrQnvtv';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
