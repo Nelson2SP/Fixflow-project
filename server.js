@@ -7,7 +7,7 @@ const app = express();
 
 // ===== CONFIGURAÇÃO DE CORS (CORRIGIDA) =====
 app.use(cors({
-  origin: '*', // Permite qualquer origem (para testes)
+  origin: '*', // ← TEM QUE ESTAR COM '*' (asterisco)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
