@@ -6,10 +6,12 @@ require('dotenv').config();
 
 const app = express();
 // Configuração de CORS para aceitar requisições de qualquer origem (necessário para a Vercel)
+// Configuração de CORS - ACEITA SEU DOMÍNIO ESPECÍFICO
 app.use(cors({
-  origin: '*', // Permite qualquer domínio (para testes). Em produção, você pode restringir para o domínio da Vercel.
+  origin: 'https://fixflow-project.vercel.app', // SEU DOMÍNIO EXATO!
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
+}));
 }));
 // ROTA PRINCIPAL (raiz)
 app.get('/', (req, res) => {
