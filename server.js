@@ -2,42 +2,30 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
 
 const app = express();
-// Configuração de CORS para aceitar requisições de qualquer origem (necessário para a Vercel)
-// Configuração de CORS - ACEITA SEU DOMÍNIO ESPECÍFICO
+
+// ===== CONFIGURAÇÃO DE CORS (CORRIGIDA) =====
 app.use(cors({
-  origin: 'https://fixflow-project.vercel.app', // SEU DOMÍNIO EXATO!
+  origin: '*', // Permite qualquer origem (para testes)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-}));
-// ROTA PRINCIPAL (raiz)
-app.get('/', (req, res) => {
-  res.json({ 
-    mensagem: '🔥 API FixFlow está no ar!', 
-    status: 'online',
-    versao: '1.0.0'
-  });
-});
+
+app.use(express.json());
 
 // ===== CONEXÃO COM SUPABASE =====
-// IMPORTANTE: Depois que criar as tabelas, você vai substituir essas variáveis
-const supabaseUrl = 'https://nqxmojacgnblxfiqkkeo.supabase.co';
-const supabaseKey = 'sb_publishable_tAoELxOpteV2pOjrYMMfAg_EWrQnvtv';
+// ⚠️ IMPORTANTE: Substitua pelos valores do SEU projeto!
+const supabaseUrl = 'https://rkdpanqjecqdthwclhki.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrZHBhbnFqZWNxZHRod2NsaGtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMjQ3NjAsImV4cCI6MjA1OTYwMDc2MH0.BfT4p6DpqEPhHgRMPbWt95_f0hZxWoiLVZ-aL3lxd_A';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// ===== ROTA DE TESTE (para ver se o servidor está vivo) =====
+// ===== ROTA DE TESTE =====
 app.get('/', (req, res) => {
-  res.json({ 
-    mensagem: '🔥 API FixFlow está no ar!', 
-    status: 'online',
-    versao: '1.0.0'
-  });
+  res.json({ mensagem: '🔥 API FixFlow está no ar!', status: 'online', versao: '1.0.0' });
 });
 
-// ROTA: Listar todas as OS
+// ===== ROTA PARA LISTAR OS =====
 app.get('/api/os', async (req, res) => {
   try {
     const { data: ordens, error } = await supabase
@@ -47,7 +35,6 @@ app.get('/api/os', async (req, res) => {
 
     if (error) throw error;
 
-    // Calcular KPIs
     const total = ordens?.length || 0;
     const emManutencao = ordens?.filter(o => o.status === 'EM MANUTENÇÃO').length || 0;
     const pronto = ordens?.filter(o => o.status === 'PRONTO').length || 0;
@@ -65,7 +52,7 @@ app.get('/api/os', async (req, res) => {
   }
 });
 
-// ROTA: Criar nova OS
+// ===== ROTA PARA CRIAR OS =====
 app.post('/api/os', async (req, res) => {
   try {
     const { 
@@ -79,7 +66,6 @@ app.post('/api/os', async (req, res) => {
       observacoes 
     } = req.body;
 
-    // Contar quantas OS já existem para gerar número
     const { count, error: countError } = await supabase
       .from('ordens_servico')
       .select('*', { count: 'exact', head: true });
@@ -92,7 +78,7 @@ app.post('/api/os', async (req, res) => {
       .from('ordens_servico')
       .insert([{
         numero_os,
-        empresa_id: '11111111-1111-1111-1111-111111111111', // Depois trocamos pelo ID real
+        empresa_id: '11111111-1111-1111-1111-111111111111',
         cliente_nome,
         cliente_telefone,
         aparelho,
@@ -112,7 +98,7 @@ app.post('/api/os', async (req, res) => {
   }
 });
 
-// ROTA: Atualizar OS
+// ===== ROTA PARA ATUALIZAR OS =====
 app.put('/api/os/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -131,7 +117,7 @@ app.put('/api/os/:id', async (req, res) => {
   }
 });
 
-// ROTA: Excluir OS
+// ===== ROTA PARA EXCLUIR OS =====
 app.delete('/api/os/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -148,6 +134,7 @@ app.delete('/api/os/:id', async (req, res) => {
     res.status(500).json({ erro: error.message });
   }
 });
+
 // ===== INICIALIZAÇÃO =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
