@@ -5,13 +5,12 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+// Configuração de CORS para aceitar requisições de qualquer origem (necessário para a Vercel)
 app.use(cors({
-  origin: '*', // Permite qualquer origem (para testes)
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type']
+  origin: '*', // Permite qualquer domínio (para testes). Em produção, você pode restringir para o domínio da Vercel.
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 // ROTA PRINCIPAL (raiz)
 app.get('/', (req, res) => {
   res.json({ 
