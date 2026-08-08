@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixFlow - Gestão de OS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    .header { background-color: #1e293b; color: #fff; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #0284c7; }
+    .header h1 { font-size: 1.3rem; font-weight: 700; margin: 0; }
+    .header small { color: #38bdf8; font-size: 0.8rem; }
+    .kpi-card { border: none; border-radius: 8px; color: #fff; padding: 15px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .kpi-card .numero { font-size: 2rem; font-weight: 700; }
+    .kpi-card .label { font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; }
+    .bg-recebido { background-color: #6c757d; }
+    .bg-manutencao { background-color: #0d6efd; }
+    .bg-peca { background-color: #ffc107; color: #000; }
+    .bg-pronto { background-color: #198754; }
+    .bg-entregue { background-color: #0dcaf0; color: #000; }
+    .table-custom { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .table-custom th { background: #f8f9fa; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; padding: 12px 8px; }
+    .table-custom td { font-size: 0.9rem; padding: 10px 8px; vertical-align: middle; }
+    .badge-status { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .badge-recebido { background: #e9ecef; color: #495057; }
+    .badge-manutencao { background: #cfe2ff; color: #0d6efd; }
+    .badge-peca { background: #fff3cd; color: #856404; }
+    .badge-pronto { background: #d1e7dd; color: #0a3622; }
+    .badge-entregue { background: #cff4fc; color: #055160; }
+    .btn-whatsapp { background: #25D366; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; }
+    .btn-whatsapp:hover { background: #1da851; color: #fff; }
+    .modal-header { background: #1e293b; color: #fff; }
+    .modal-header .btn-close { filter: invert(1); }
+    .btn-edit { border: 1px solid #0d6efd; color: #0d6efd; background: transparent; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .btn-edit:hover { background: #0d6efd; color: #fff; }
+    .btn-delete { border: 1px solid #dc3545; color: #dc3545; background: transparent; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+    .btn-delete:hover { background: #dc3545; color: #fff; }
+    .btn-add { background: #1e293b; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; }
+    .btn-add:hover { background: #0f172a; color: #fff; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1><i class="fa-solid fa-screwdriver-wrench text-primary me-2"></i> FixFlow</h1>
+      <small>Gestão de Ordens de Serviço</small>
+    </div>
+    <div>
+      <button class="btn-add me-2" onclick="abrirModal()"><i class="fa-solid fa-plus me-1"></i> Nova OS</button>
+      <button class="btn btn-sm btn-outline-light" onclick="carregarOS()"><i class="fa-solid fa-rotate"></i></button>
+    </div>
+  </div>
+
+  <!-- CORPO -->
+  <div class="container-fluid p-4">
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4" id="kpis">
+      <div class="col-md-2"><div class="kpi-card bg-recebido"><div class="numero" id="total">0</div><div class="label">Total</div></div></div>
+      <div class="col-md-2"><div class="kpi-card bg-manutencao"><div class="numero" id="manutencao">0</div><div class="label">Em Manutenção</div></div></div>
+      <div class="col-md-2"><div class="kpi-card bg-peca"><div class="numero" id="peca">0</div><div class="label">Aguard. Peça</div></div></div>
+      <div class="col-md-2"><div class="kpi-card bg-pronto"><div class="numero" id="pronto">0</div><div class="label">Prontos</div></div></div>
+      <div class="col-md-2"><div class="kpi-card bg-entregue"><div class="numero" id="entregue">0</div><div class="label">Entregues</div></div></div>
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-responsive table-custom">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>OS</th>
+            <th>Cliente</th>
+            <th>Aparelho</th>
+            <th>Problema</th>
+            <th>Técnico</th>
+            <th>Status</th>
+            <th>Prazo</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-os">
+          <tr><td colspan="8" class="text-center text-muted py-4">Carregando ordens de serviço...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL NOVA OS / EDITAR -->
+  <div class="modal fade" id="modalOS" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-clipboard-list me-2"></i> <span id="modal-titulo">Nova OS</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <form id="form-os" onsubmit="salvarOS(event)">
+          <div class="modal-body">
+            <input type="hidden" id="os-id" value="">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-bold small">Cliente</label>
+                <input type="text" class="form-control" id="cliente-nome" placeholder="Nome do cliente" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold small">Telefone</label>
+                <input type="text" class="form-control" id="cliente-telefone" placeholder="(11) 99999-9999">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Aparelho</label>
+                <input type="text" class="form-control" id="aparelho" placeholder="iPhone, Samsung..." required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Modelo</label>
+                <input type="text" class="form-control" id="modelo" placeholder="13 Pro, S23...">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Técnico</label>
+                <input type="text" class="form-control" id="tecnico" placeholder="Nome do técnico">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label fw-bold small">Problema relatado</label>
+                <input type="text" class="form-control" id="problema" placeholder="Ex: Tela quebrada, bateria viciada...">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold small">Status</label>
+                <select class="form-select" id="status">
+                  <option value="RECEBIDO">Recebido</option>
+                  <option value="EM MANUTENÇÃO">Em Manutenção</option>
+                  <option value="AGUARDANDO PEÇA">Aguardando Peça</option>
+                  <option value="PRONTO">Pronto</option>
+                  <option value="ENTREGUE">Entregue</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-bold small">Prazo</label>
+                <input type="date" class="form-control" id="prazo">
+              </div>
+              <div class="col-md-12">
+                <label class="form-label fw-bold small">Observações</label>
+                <input type="text" class="form-control" id="observacoes" placeholder="Observações adicionais...">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary fw-bold"><i class="fa-solid fa-save me-1"></i> Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ===================== CONFIGURAÇÃO =====================
+    const API_URL = 'https://fixflow-api.onrender.com/api/os'; // URL DA SUA API NO RENDER
+
+    let modalInstance = null;
+    let osEditando = null;
+
+    // ===================== CARREGAR OS =====================
+    async function carregarOS() {
+      const tbody = document.getElementById('tabela-os');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Carregando...</td></tr>';
+
+      try {
+        const response = await fetch(API_URL);
+        const dados = await response.json();
+
+        if (!dados.sucesso) throw new Error(dados.erro);
+
+        // Atualizar KPIs
+        document.getElementById('total').textContent = dados.kpis.total;
+        document.getElementById('manutencao').textContent = dados.kpis.emManutencao;
+        document.getElementById('peca').textContent = dados.kpis.aguardandoPeca;
+        document.getElementById('pronto').textContent = dados.kpis.pronto;
+        document.getElementById('entregue').textContent = dados.kpis.entregue;
+
+        // Montar tabela
+        if (dados.registros.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma OS cadastrada. Clique em "Nova OS" para começar!</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = dados.registros.map(os => `
+          <tr class="fade-in">
+            <td class="fw-bold text-primary">${os.numero_os}</td>
+            <td>${os.cliente_nome}</td>
+            <td>${os.aparelho} ${os.modelo ? '• ' + os.modelo : ''}</td>
+            <td>${os.problema || '-'}</td>
+            <td>${os.tecnico || '-'}</td>
+            <td><span class="badge-status badge-${os.status.toLowerCase().replace(' ', '-')}">${os.status}</span></td>
+            <td>${os.prazo ? new Date(os.prazo).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="text-center">
+              <button class="btn-edit me-1" onclick="abrirModal('${os.id}')" title="Editar"><i class="fa-solid fa-pencil"></i></button>
+              ${os.cliente_telefone ? `<button class="btn-whatsapp me-1" onclick="enviarWhatsApp('${os.cliente_telefone}', '${os.numero_os}', '${os.status}')" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>` : ''}
+              <button class="btn-delete" onclick="excluirOS('${os.id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Erro ao carregar: ${error.message}</td></tr>`;
+        console.error('Erro:', error);
+      }
+    }
+
+    // ===================== ABRIR MODAL (Nova/Editar) =====================
+    function abrirModal(id = null) {
+      const modal = document.getElementById('modalOS');
+      if (!modalInstance) {
+        modalInstance = new bootstrap.Modal(modal);
+      }
+
+      if (id) {
+        // EDITAR - busca dados da OS
+        document.getElementById('modal-titulo').textContent = 'Editar OS';
+        const os = obterOSPorId(id);
+        if (os) {
+          document.getElementById('os-id').value = os.id;
+          document.getElementById('cliente-nome').value = os.cliente_nome;
+          document.getElementById('cliente-telefone').value = os.cliente_telefone || '';
+          document.getElementById('aparelho').value = os.aparelho;
+          document.getElementById('modelo').value = os.modelo || '';
+          document.getElementById('tecnico').value = os.tecnico || '';
+          document.getElementById('problema').value = os.problema || '';
+          document.getElementById('status').value = os.status;
+          document.getElementById('prazo').value = os.prazo || '';
+          document.getElementById('observacoes').value = os.observacoes || '';
+        }
+      } else {
+        // NOVA OS
+        document.getElementById('modal-titulo').textContent = 'Nova OS';
+        document.getElementById('form-os').reset();
+        document.getElementById('os-id').value = '';
+        document.getElementById('status').value = 'RECEBIDO';
+      }
+
+      modalInstance.show();
+    }
+
+    // ===================== SALVAR OS =====================
+    async function salvarOS(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('os-id').value;
+      const dados = {
+        cliente_nome: document.getElementById('cliente-nome').value,
+        cliente_telefone: document.getElementById('cliente-telefone').value,
+        aparelho: document.getElementById('aparelho').value,
+        modelo: document.getElementById('modelo').value,
+        tecnico: document.getElementById('tecnico').value,
+        problema: document.getElementById('problema').value,
+        status: document.getElementById('status').value,
+        prazo: document.getElementById('prazo').value,
+        observacoes: document.getElementById('observacoes').value
+      };
+
+      try {
+        const url = id ? `${API_URL}/${id}` : API_URL;
+        const method = id ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dados)
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.sucesso) {
+          modalInstance.hide();
+          carregarOS();
+        } else {
+          alert('Erro ao salvar: ' + (resultado.erro || 'Tente novamente'));
+        }
+      } catch (error) {
+        alert('Erro de conexão: ' + error.message);
+      }
+    }
+
+    // ===================== EXCLUIR OS =====================
+    async function excluirOS(id) {
+      if (!confirm('Tem certeza que deseja excluir esta OS?')) return;
+
+      try {
+        const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        const resultado = await response.json();
+
+        if (resultado.sucesso) {
+          carregarOS();
+        } else {
+          alert('Erro ao excluir: ' + (resultado.erro || 'Tente novamente'));
+        }
+      } catch (error) {
+        alert('Erro de conexão: ' + error.message);
+      }
+    }
+
+    // ===================== ENVIAR WHATSAPP =====================
+    function enviarWhatsApp(telefone, numeroOS, status) {
+      if (!telefone || telefone === '-') {
+        alert('❌ Este cliente não tem telefone cadastrado!');
+        return;
+      }
+
+      const mensagens = {
+        'RECEBIDO': `📱 *OS ${numeroOS} - RECEBIDA*\n\nOlá! Seu aparelho foi recebido em nossa assistência. Em breve iniciaremos a análise.`,
+        'EM MANUTENÇÃO': `🔧 *OS ${numeroOS} - EM MANUTENÇÃO*\n\nOlá! Seu aparelho está sendo reparado. Assim que ficar pronto, avisamos!`,
+        'AGUARDANDO PEÇA': `⏳ *OS ${numeroOS} - AGUARDANDO PEÇA*\n\nOlá! Seu aparelho está aguardando a chegada de uma peça. Assim que chegar, continuaremos o serviço.`,
+        'PRONTO': `🟢 *OS ${numeroOS} - PRONTO!*\n\nOlá! Seu aparelho já está pronto para retirada. 🎉\n\n📍 Traga seu documento e venha buscar!`,
+        'ENTREGUE': `✅ *OS ${numeroOS} - ENTREGUE*\n\nOlá! Seu aparelho foi entregue. Agradecemos a confiança! 🙏`
+      };
+
+      const mensagem = mensagens[status] || `📱 *OS ${numeroOS}*\nStatus: ${status}`;
+      const link = `https://wa.me/55${telefone.replace(/\D/g, '')}?text=${encodeURIComponent(mensagem)}`;
+      window.open(link, '_blank');
+    }
+
+    // ===================== BUSCAR OS POR ID (para editar) =====================
+    function obterOSPorId(id) {
+      // Essa função precisa ser alimentada com os dados da tabela
+      // Vamos fazer uma busca na tabela diretamente
+      const linhas = document.querySelectorAll('#tabela-os tr');
+      for (const linha of linhas) {
+        // A gente não tem como buscar por id direto no HTML, então vamos fazer uma requisição
+        // Melhor: vamos usar a função carregarOS() e guardar os dados em cache
+      }
+      return null;
+    }
+
+    // ===================== SOBRECARGA: Guardar dados em cache =====================
+    let cacheOS = [];
+
+    // Sobrescrever carregarOS para guardar cache
+    const carregarOSOriginal = carregarOS;
+    carregarOS = async function() {
+      const tbody = document.getElementById('tabela-os');
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4"><i class="fa-solid fa-spinner fa-spin me-2"></i>Carregando...</td></tr>';
+
+      try {
+        const response = await fetch(API_URL);
+        const dados = await response.json();
+
+        if (!dados.sucesso) throw new Error(dados.erro);
+
+        cacheOS = dados.registros;
+
+        // Atualizar KPIs
+        document.getElementById('total').textContent = dados.kpis.total;
+        document.getElementById('manutencao').textContent = dados.kpis.emManutencao;
+        document.getElementById('peca').textContent = dados.kpis.aguardandoPeca;
+        document.getElementById('pronto').textContent = dados.kpis.pronto;
+        document.getElementById('entregue').textContent = dados.kpis.entregue;
+
+        // Montar tabela
+        if (cacheOS.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Nenhuma OS cadastrada. Clique em "Nova OS" para começar!</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = cacheOS.map(os => `
+          <tr class="fade-in">
+            <td class="fw-bold text-primary">${os.numero_os}</td>
+            <td>${os.cliente_nome}</td>
+            <td>${os.aparelho} ${os.modelo ? '• ' + os.modelo : ''}</td>
+            <td>${os.problema || '-'}</td>
+            <td>${os.tecnico || '-'}</td>
+            <td><span class="badge-status badge-${os.status.toLowerCase().replace(' ', '-')}">${os.status}</span></td>
+            <td>${os.prazo ? new Date(os.prazo).toLocaleDateString('pt-BR') : '-'}</td>
+            <td class="text-center">
+              <button class="btn-edit me-1" onclick="abrirModal('${os.id}')" title="Editar"><i class="fa-solid fa-pencil"></i></button>
+              ${os.cliente_telefone ? `<button class="btn-whatsapp me-1" onclick="enviarWhatsApp('${os.cliente_telefone}', '${os.numero_os}', '${os.status}')" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>` : ''}
+              <button class="btn-delete" onclick="excluirOS('${os.id}')" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger py-4">Erro ao carregar: ${error.message}</td></tr>`;
+        console.error('Erro:', error);
+      }
+    };
+
+    // ===================== CORRIGIR: obterOSPorId usando cache =====================
+    function obterOSPorId(id) {
+      return cacheOS.find(os => os.id === id) || null;
+    }
+
+    // ===================== INICIAR =====================
+    document.addEventListener('DOMContentLoaded', () => {
+      carregarOS();
+    });
+
+  </script>
+</body>
+</html>
