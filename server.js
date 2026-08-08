@@ -8,6 +8,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ROTA PRINCIPAL (raiz)
+app.get('/', (req, res) => {
+  res.json({ 
+    mensagem: '🔥 API FixFlow está no ar!', 
+    status: 'online',
+    versao: '1.0.0'
+  });
+});
+
 // ===== CONEXÃO COM SUPABASE =====
 // IMPORTANTE: Depois que criar as tabelas, você vai substituir essas variáveis
 const supabaseUrl = 'https://SEU_PROJETO.supabase.co';
