@@ -1,8 +1,10 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "public",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://fixflow-project.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://fixflow-project.onrender.com/api/:path*"
     }
   ]
 }
